@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚂 Miles' Investigation Station</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --train: #7b2d8b;
+    --train-light: #b05cc7;
+    --train-pale: #f5e6fa;
+    --plane: #c0392b;
+    --plane-light: #e05c4b;
+    --plane-pale: #fdecea;
+    --code: #1a6b3c;
+    --code-light: #28a660;
+    --code-pale: #e2f5ea;
+    --cross: #1a5276;
+    --cross-light: #2e86c1;
+    --cross-pale: #e8f4fd;
+    --gold: #f39c12;
+    --bg: #f4f6fb;
+    --text: #16213e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.09);
+    --r: 20px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 32px 20px 80px;
+    max-width: 980px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 48px 32px;
+    background: linear-gradient(135deg, #16213e 0%, #7b2d8b 45%, #c0392b 100%);
+    border-radius: 28px;
+    color: white;
+    margin-bottom: 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '🚂✈️💻';
+    font-size: 90px;
+    position: absolute;
+    top: -18px; right: -10px;
+    opacity: 0.1;
+    transform: rotate(10deg);
+  }
+  header h1 { font-family: 'Fredoka One', cursive; font-size: 2.6em; margin-bottom: 8px; text-shadow: 0 2px 14px rgba(0,0,0,0.3); }
+  header p  { font-size: 1.05em; opacity: 0.9; max-width: 560px; margin: 0 auto; font-weight: 600; }
+
+  /* ── SECTION HEADERS ── */
+  .section-header {
+    display: flex; align-items: center; gap: 14px;
+    margin: 50px 0 22px; padding-bottom: 10px; border-bottom: 3px solid;
+  }
+  .section-header .emoji { font-size: 2em; }
+  .section-header h2 { font-family: 'Fredoka One', cursive; font-size: 1.8em; }
+  .section-header.train  { border-color: var(--train);  color: var(--train); }
+  .section-header.plane  { border-color: var(--plane);  color: var(--plane); }
+  .section-header.code   { border-color: var(--code);   color: var(--code); }
+  .section-header.cross  { border-color: var(--cross);  color: var(--cross); }
+  .section-header.share  { border-color: var(--gold);   color: #b7770d; }
+
+  /* ── CARDS ── */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(275px, 1fr)); gap: 18px; }
+
+  .card {
+    border-radius: var(--r); padding: 22px;
+    box-shadow: var(--shadow); border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 10px 32px rgba(0,0,0,0.14); }
+  .card:focus { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  .card.train { background: var(--train-pale); border-color: var(--train-light); }
+  .card.plane { background: var(--plane-pale); border-color: var(--plane-light); }
+  .card.code  { background: var(--code-pale);  border-color: var(--code-light); }
+  .card.cross { background: var(--cross-pale); border-color: var(--cross-light); }
+
+  .card-label { font-size: 0.7em; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; margin-bottom: 6px; }
+  .card.train .card-label { color: var(--train); }
+  .card.plane .card-label { color: var(--plane); }
+  .card.code  .card-label { color: var(--code); }
+  .card.cross .card-label { color: var(--cross); }
+
+  .card h3 { font-size: 1.05em; font-weight: 900; margin-bottom: 7px; }
+  .card p  { font-size: 0.88em; color: #444; margin-bottom: 10px; }
+
+  .click-hint {
+    font-size: 0.75em; font-weight: 700; margin-top: 12px;
+    display: inline-block; padding: 4px 12px;
+    border-radius: 20px; background: rgba(255,255,255,0.65); color: #555;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,15,40,0.55); z-index: 1000;
+    align-items: center; justify-content: center;
+    padding: 20px; backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; animation: fadein 0.2s ease; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: white; border-radius: 24px;
+    max-width: 640px; width: 100%; max-height: 88vh;
+    overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+    animation: slidein 0.22s ease; position: relative;
+  }
+  @keyframes slidein { from { transform: translateY(18px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  .modal-top { padding: 28px 28px 20px; border-radius: 24px 24px 0 0; position: relative; }
+  .modal-top.train { background: var(--train-pale); }
+  .modal-top.plane { background: var(--plane-pale); }
+  .modal-top.code  { background: var(--code-pale); }
+  .modal-top.cross { background: var(--cross-pale); }
+
+  .modal-close {
+    position: absolute; top: 16px; right: 18px;
+    background: rgba(255,255,255,0.8); border: none; border-radius: 50%;
+    width: 36px; height: 36px; font-size: 1.2em; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12); transition: background 0.15s;
+  }
+  .modal-close:hover { background: white; }
+
+  .modal-category { font-size: 0.72em; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; margin-bottom: 6px; }
+  .modal-top.train .modal-category { color: var(--train); }
+  .modal-top.plane .modal-category { color: var(--plane); }
+  .modal-top.code  .modal-category { color: var(--code); }
+  .modal-top.cross .modal-category { color: var(--cross); }
+
+  .modal-title { font-family: 'Fredoka One', cursive; font-size: 1.7em; line-height: 1.2; margin-bottom: 8px; padding-right: 40px; }
+  .modal-desc  { font-size: 0.92em; color: #444; }
+
+  .modal-body { padding: 24px 28px 28px; }
+  .steps-heading { font-family: 'Fredoka One', cursive; font-size: 1.15em; margin-bottom: 16px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+
+  .steps { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+
+  .step {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: #f6f7fb; border-radius: 14px; padding: 14px 16px;
+    border-left: 4px solid #ddd;
+  }
+  .step.train-step { border-color: var(--train-light); }
+  .step.plane-step { border-color: var(--plane-light); }
+  .step.code-step  { border-color: var(--code-light); }
+  .step.cross-step { border-color: var(--cross-light); }
+
+  .step-num { font-family: 'Fredoka One', cursive; font-size: 1.3em; min-width: 32px; line-height: 1; margin-top: 2px; }
+  .step.train-step .step-num { color: var(--train); }
+  .step.plane-step .step-num { color: var(--plane); }
+  .step.code-step  .step-num { color: var(--code); }
+  .step.cross-step .step-num { color: var(--cross); }
+
+  .step-text strong { display: block; font-weight: 800; font-size: 0.95em; margin-bottom: 2px; }
+  .step-text span   { font-size: 0.88em; color: #555; }
+
+  .finish-box {
+    margin-top: 20px; padding: 14px 18px; border-radius: 14px;
+    font-size: 0.9em; font-weight: 700; display: flex; gap: 10px; align-items: center;
+  }
+  .finish-box.train { background: rgba(176,92,199,0.15); color: var(--train); }
+  .finish-box.plane { background: rgba(192,57,43,0.12);  color: #922b21; }
+  .finish-box.code  { background: rgba(40,166,96,0.15);  color: var(--code); }
+  .finish-box.cross { background: rgba(46,134,193,0.15); color: var(--cross); }
+  .finish-box .finish-icon { font-size: 1.5em; flex-shrink: 0; }
+
+  /* ── SHARING ── */
+  .tips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin-top: 18px; }
+  .tip-card { background: white; border-radius: 14px; padding: 16px; text-align: center; box-shadow: var(--shadow); border: 2px solid #eee; }
+  .tip-icon { font-size: 1.9em; margin-bottom: 6px; }
+  .tip-card h4 { font-weight: 800; font-size: 0.88em; margin-bottom: 3px; }
+  .tip-card p  { font-size: 0.78em; color: #666; }
+
+  /* ── TEACHER NOTE ── */
+  .teacher-note { background: linear-gradient(135deg, #16213e, #7b2d8b); color: white; border-radius: 20px; padding: 30px; margin-top: 56px; }
+  .teacher-note h3 { font-family: 'Fredoka One', cursive; font-size: 1.4em; margin-bottom: 14px; color: #e8c4f5; }
+  .teacher-note ul { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .teacher-note li { font-size: 0.88em; padding-left: 18px; position: relative; }
+  .teacher-note li::before { content: '✓'; position: absolute; left: 0; color: #28a660; font-weight: 800; }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.8em; }
+    .cards { grid-template-columns: 1fr; }
+    .teacher-note ul { grid-template-columns: 1fr; }
+    .tips-grid { grid-template-columns: 1fr 1fr; }
+    .modal-title { font-size: 1.3em; }
+    .modal-body { padding: 18px 18px 22px; }
+    .modal-top { padding: 20px 18px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🚂 Miles' Investigation Station</h1>
+  <p>Pick an investigation you love, tap to see your steps, then go and create something brilliant!</p>
+</header>
+
+<!-- ═══════ TRAINS ═══════ -->
+<div class="section-header train">
+  <span class="emoji">🚂</span>
+  <h2>Train Investigations</h2>
+</div>
+<div class="cards">
+
+  <div class="card train" tabindex="0" onclick="openModal('trn1')">
+    <div class="card-label">🗺️ Mapping</div>
+    <h3>Map a Real Rail Network</h3>
+    <p>Choose a famous rail network and create your own accurate map of it — just like the ones in real stations.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card train" tabindex="0" onclick="openModal('trn2')">
+    <div class="card-label">⚡ Engineering</div>
+    <h3>How Do Trains Actually Move?</h3>
+    <p>Research the science of how steam, diesel and electric trains generate the power to move.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card train" tabindex="0" onclick="openModal('trn3')">
+    <div class="card-label">🏆 Speed Records</div>
+    <h3>The World's Fastest Trains</h3>
+    <p>Research the fastest trains ever built and create a speed comparison with data and graphs.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card train" tabindex="0" onclick="openModal('trn4')">
+    <div class="card-label">⏳ History</div>
+    <h3>The History of the Railways</h3>
+    <p>Create a timeline from the first steam locomotive to today's maglev trains.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card train" tabindex="0" onclick="openModal('trn5')">
+    <div class="card-label">🌍 Geography</div>
+    <h3>Famous Train Journeys of the World</h3>
+    <p>Research and map 5 of the world's most incredible train journeys and what makes each one special.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card train" tabindex="0" onclick="openModal('trn6')">
+    <div class="card-label">🔬 Science</div>
+    <h3>How Do Maglev Trains Float?</h3>
+    <p>Investigate the incredible science of magnetic levitation — how a train can float with no wheels!</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card train" tabindex="0" onclick="openModal('trn7')">
+    <div class="card-label">📐 Design</div>
+    <h3>Design the Train of the Future</h3>
+    <p>Invent a futuristic train — how fast, how powered, what route? Draw blueprints and write the specs.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+</div>
+
+<!-- ═══════ PLANES ═══════ -->
+<div class="section-header plane">
+  <span class="emoji">✈️</span>
+  <h2>Aviation Investigations</h2>
+</div>
+<div class="cards">
+
+  <div class="card plane" tabindex="0" onclick="openModal('pln1')">
+    <div class="card-label">🗺️ Flight Paths</div>
+    <h3>Map the World's Busiest Flight Routes</h3>
+    <p>Research and map the busiest flight paths on Earth — the data might surprise you!</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card plane" tabindex="0" onclick="openModal('pln2')">
+    <div class="card-label">🔬 Science</div>
+    <h3>The Forces of Flight Explained</h3>
+    <p>Research lift, drag, thrust and weight — then create a diagram and explanation good enough to teach the class.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card plane" tabindex="0" onclick="openModal('pln3')">
+    <div class="card-label">🏆 Records</div>
+    <h3>The World's Most Extreme Aircraft</h3>
+    <p>Find the fastest, largest, highest-flying and strangest aircraft ever built. Compare them with data.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card plane" tabindex="0" onclick="openModal('pln4')">
+    <div class="card-label">⏳ History</div>
+    <h3>From the Wright Brothers to Today</h3>
+    <p>Create a timeline of aviation history — from the first 12-second flight to supersonic jets.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card plane" tabindex="0" onclick="openModal('pln5')">
+    <div class="card-label">🎙️ Expert Report</div>
+    <h3>Be an Aviation Journalist</h3>
+    <p>Choose a famous aircraft or aviation event and write or record a detailed expert report about it.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card plane" tabindex="0" onclick="openModal('pln6')">
+    <div class="card-label">📐 Engineering</div>
+    <h3>How Are Planes Built?</h3>
+    <p>Research how a commercial aircraft is designed, tested and built — from blueprint to first flight.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+</div>
+
+<!-- ═══════ SCRATCH / CODING ═══════ -->
+<div class="section-header code">
+  <span class="emoji">💻</span>
+  <h2>Coding &amp; Computing Investigations</h2>
+</div>
+<div class="cards">
+
+  <div class="card code" tabindex="0" onclick="openModal('cod1')">
+    <div class="card-label">🎮 Scratch Game</div>
+    <h3>Build a Train Game in Scratch</h3>
+    <p>Design and code a game where a train travels between stations, collecting passengers and avoiding obstacles.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card code" tabindex="0" onclick="openModal('cod2')">
+    <div class="card-label">✈️ Scratch Simulation</div>
+    <h3>Code a Flying Plane in Scratch</h3>
+    <p>Build a Scratch project where a plane takes off, flies and lands — using real aviation ideas.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card code" tabindex="0" onclick="openModal('cod3')">
+    <div class="card-label">🗺️ Scratch Map</div>
+    <h3>Create an Interactive Map in Scratch</h3>
+    <p>Build a clickable map in Scratch — click a location to find out about trains or planes that go there!</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card code" tabindex="0" onclick="openModal('cod4')">
+    <div class="card-label">🧠 Scratch Quiz</div>
+    <h3>Code a Trains &amp; Planes Quiz in Scratch</h3>
+    <p>Build a fully working quiz game in Scratch with questions, score-keeping and a results screen.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card code" tabindex="0" onclick="openModal('cod5')">
+    <div class="card-label">🔬 How Computers Work</div>
+    <h3>Explain How a Computer Thinks</h3>
+    <p>Research how computers process information — inputs, outputs, CPU, memory — and explain it to the class.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card code" tabindex="0" onclick="openModal('cod6')">
+    <div class="card-label">📖 Teach It</div>
+    <h3>Teach Someone to Use Scratch</h3>
+    <p>Create a beginner's guide to Scratch — written instructions and a tutorial video — for someone who has never coded before.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card code" tabindex="0" onclick="openModal('cod7')">
+    <div class="card-label">🌐 Real-World Coding</div>
+    <h3>How Is Coding Used in Real Transport?</h3>
+    <p>Research how computer code is used in real trains, planes and airports. How much runs on software?</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+</div>
+
+<!-- ═══════ CROSS-TOPIC ═══════ -->
+<div class="section-header cross">
+  <span class="emoji">🌟</span>
+  <h2>Cross-Topic Mega Investigations</h2>
+</div>
+<div class="cards">
+
+  <div class="card cross" tabindex="0" onclick="openModal('crs1')">
+    <div class="card-label">🚂✈️ Trains + Planes</div>
+    <h3>Train vs Plane — Which Should You Take?</h3>
+    <p>Research a real journey (e.g. London to Paris). Compare trains vs planes on speed, cost, carbon and comfort. Write your verdict.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card cross" tabindex="0" onclick="openModal('crs2')">
+    <div class="card-label">💻🚂 Coding + Trains</div>
+    <h3>Code a Train Timetable Tool in Scratch</h3>
+    <p>Build a Scratch program that lets you choose a destination and see train departure times — like a real station board!</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card cross" tabindex="0" onclick="openModal('crs3')">
+    <div class="card-label">🗺️💻 Mapping + Coding</div>
+    <h3>Build a Digital Transport Map</h3>
+    <p>Design an interactive digital map in Scratch or Google Slides where you can explore train and flight routes.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card cross" tabindex="0" onclick="openModal('crs4')">
+    <div class="card-label">🌟 All Topics!</div>
+    <h3>My Ultimate Expert Presentation</h3>
+    <p>Choose the ONE topic you know most about and prepare a presentation that shows the class what a real expert looks like.</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+  <div class="card cross" tabindex="0" onclick="openModal('crs5')">
+    <div class="card-label">🌍 All Topics!</div>
+    <h3>Design a Smart City Transport System</h3>
+    <p>Invent a transport network for a future city — trains, planes, routes, a map, AND the code that runs it. The full package!</p>
+    <span class="click-hint">👆 Tap to see your steps</span>
+  </div>
+
+</div>
+
+<!-- ═══════ SHARING ═══════ -->
+<div class="section-header share">
+  <span class="emoji">📤</span>
+  <h2>Ways to Share Your Work</h2>
+</div>
+<div class="tips-grid">
+  <div class="tip-card"><div class="tip-icon">💻</div><h4>Share a Scratch Project</h4><p>Publish your Scratch project and share the link so anyone can play it.</p></div>
+  <div class="tip-card"><div class="tip-icon">🖥️</div><h4>Google Slides</h4><p>Build a presentation on the Chromebook and present it to the class.</p></div>
+  <div class="tip-card"><div class="tip-icon">🎥</div><h4>Screen Recording</h4><p>Record your screen on the Chromebook to show your Scratch project or map in action.</p></div>
+  <div class="tip-card"><div class="tip-icon">🗺️</div><h4>Poster Map</h4><p>Create a hand-drawn or printed map to display in the classroom.</p></div>
+  <div class="tip-card"><div class="tip-icon">📝</div><h4>Written Report</h4><p>Write up your findings as a detailed expert report or article.</p></div>
+  <div class="tip-card"><div class="tip-icon">🎙️</div><h4>Expert Talk</h4><p>Record an audio explanation or present live as the class expert.</p></div>
+  <div class="tip-card"><div class="tip-icon">📊</div><h4>Data Display</h4><p>Create charts and graphs from your research data using Google Sheets.</p></div>
+  <div class="tip-card"><div class="tip-icon">📖</div><h4>Expert Guide</h4><p>Write a printed guide or mini book to share with the class.</p></div>
+</div>
+
+<!-- ═══════ TEACHER NOTE ═══════ -->
+<div class="teacher-note">
+  <h3>🍎 Educator Setup Notes — Miles, Year 5</h3>
+  <ul>
+    <li>Allow Miles to self-select his investigation — autonomy is key</li>
+    <li>Scratch projects can be shared via link — low-pressure sharing</li>
+    <li>Screen recording on Chromebook avoids live performance anxiety</li>
+    <li>Mapping tasks suit his love of systems and order</li>
+    <li>Cross-topic projects leverage multiple strengths at once</li>
+    <li>Coding investigations connect to real-world STEM pathways</li>
+    <li>Pre-load scratch.mit.edu and relevant research tabs</li>
+    <li>Build in structured breaks — especially during long coding sessions</li>
+    <li>Celebrate published Scratch projects as real achievements</li>
+    <li>"Teach someone to use Scratch" positions him as classroom expert</li>
+    <li>Data/graphs in transport tasks connect to maths outcomes naturally</li>
+    <li>Set gentle timelines: "share when it feels ready"</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════ MODAL ═══════════════════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeIfBackground(event)">
+  <div class="modal" id="modal" role="dialog" aria-modal="true" tabindex="-1">
+    <div class="modal-top" id="modalTop">
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+      <div class="modal-category" id="modalCategory"></div>
+      <div class="modal-title"    id="modalTitle"></div>
+      <div class="modal-desc"     id="modalDesc"></div>
+    </div>
+    <div class="modal-body">
+      <div class="steps-heading">🪜 Your Steps</div>
+      <ul class="steps" id="modalSteps"></ul>
+      <div class="finish-box" id="modalFinish"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const investigations = {
+
+  /* ══ TRAINS ══ */
+  trn1: {
+    theme: 'train', category: '🗺️ Mapping',
+    title: 'Map a Real Rail Network',
+    desc: 'Real rail maps are designed to be clear and easy to read — your challenge is to create one that actually works!',
+    steps: [
+      { head: 'Choose your network', body: 'Pick a real rail network you find interesting — the London Underground, the Tokyo Metro, the Indian Railways, the Trans-Siberian Railway. Do some quick research to choose.' },
+      { head: 'Research the key lines and stations', body: 'Find the main lines (often colour-coded in real life) and the major stations on each line. Write them all down in a list.' },
+      { head: 'Study how real rail maps are designed', body: 'Look at the actual map of your chosen network online. Notice how it uses straight lines, consistent angles, and colour to make it readable. Rail maps are not geographically accurate — they are designed for clarity!' },
+      { head: 'Sketch your layout', body: 'On rough paper, plan your map layout. Draw each line as a straight or gently angled line. Mark where lines meet (interchange stations) with a special symbol.' },
+      { head: 'Draw your final map', body: 'On a clean piece of paper (or using a drawing tool on the Chromebook), draw your polished map. Use a different colour for each line and clear labels for every station.' },
+      { head: 'Add a legend and title', body: 'Create a key explaining your colour codes. Add the network name as a title. Include a small "You Are Here" marker if you like.' },
+    ],
+    finish: '📤 Share: Display your map or present it explaining your design choices'
+  },
+
+  trn2: {
+    theme: 'train', category: '⚡ Engineering',
+    title: 'How Do Trains Actually Move?',
+    desc: 'There have been three completely different ways to power a train over history — research all three!',
+    steps: [
+      { head: 'Research steam engines', body: 'How did early steam locomotives work? What fuel did they use? How did the steam create movement? Write a simple explanation in your own words.' },
+      { head: 'Research diesel engines', body: 'How do diesel trains work differently from steam? What are the advantages? When did diesel replace steam and why?' },
+      { head: 'Research electric trains', body: 'How do electric trains get their power? Research overhead wires (pantographs) and third rails. What are the advantages over diesel?' },
+      { head: 'Make a comparison table', body: 'Create a table comparing all three: fuel used, how it creates movement, advantages, disadvantages, and examples of real trains that use it.' },
+      { head: 'Draw a diagram', body: 'Choose one type and draw a labelled diagram showing how the power system works — from fuel/electricity source all the way to the wheels moving.' },
+      { head: 'Write your conclusion', body: 'Which system do you think is best for the future, and why? Write a short paragraph with reasons based on your research.' },
+    ],
+    finish: '📤 Share: Comparison table + diagram + written conclusion'
+  },
+
+  trn3: {
+    theme: 'train', category: '🏆 Speed Records',
+    title: 'The World\'s Fastest Trains',
+    desc: 'Some trains go faster than most small aircraft — find out which ones and what makes them so extreme!',
+    steps: [
+      { head: 'Research the top 5 fastest trains', body: 'Find the 5 fastest trains in the world (both in regular service and experimental/record-breaking). Write: name, country, top speed, and type (maglev, high-speed rail, etc.).' },
+      { head: 'Find out what makes them fast', body: 'What technology do they use? Aerodynamic design? Special track? Magnetic levitation? Research the key engineering features for each.' },
+      { head: 'Create a speed comparison chart', body: 'Build a bar chart or table showing all 5 trains ranked by speed. Use Google Sheets or draw it by hand. Label every bar clearly.' },
+      { head: 'Add comparisons to make the numbers meaningful', body: 'How fast is a car on a motorway (110km/h)? A commercial plane (~900km/h)? Add these to your chart as reference lines so people understand the scale.' },
+      { head: 'Research the world record', body: 'Look up the absolute land speed record for a rail vehicle. Who set it? When? What was it?' },
+      { head: 'Write your expert analysis', body: 'Write a paragraph: "The fastest trains in the world are fast because…" and explain the key engineering principles behind their speed.' },
+    ],
+    finish: '📤 Share: Speed comparison chart + written analysis'
+  },
+
+  trn4: {
+    theme: 'train', category: '⏳ History',
+    title: 'The History of the Railways',
+    desc: 'Railways changed the entire world — they are one of the most important inventions in human history!',
+    steps: [
+      { head: 'Research the very beginning', body: 'Who invented the first steam locomotive? When and where? What was it used for? How fast did it go? Write down the key facts.' },
+      { head: 'Find 8–10 key moments in railway history', body: 'Research major milestones: first passenger railway, railways spreading across continents, introduction of diesel, electric trains, high-speed rail, maglev. Write a bullet point for each.' },
+      { head: 'Plan your timeline layout', body: 'Decide the format: a long strip of paper, a zigzag fold, or a digital layout. Sketch where each event will go along the line.' },
+      { head: 'Build your timeline', body: 'Mark each event at the correct point in time. Write the date, a short description, and draw or print a small image for each event.' },
+      { head: 'Add a "future" section', body: 'Extend your timeline into the future. What do YOU predict will happen with trains in the next 50 years? Add at least 2 predictions with reasons.' },
+      { head: 'Write an introduction', body: 'Write a short paragraph at the start of your timeline explaining why railways were such an important invention for humanity.' },
+    ],
+    finish: '📤 Share: Full timeline displayed on the wall or as a digital presentation'
+  },
+
+  trn5: {
+    theme: 'train', category: '🌍 Geography',
+    title: 'Famous Train Journeys of the World',
+    desc: 'Some train journeys are so spectacular that people travel across the world just to ride them!',
+    steps: [
+      { head: 'Research and choose your 5 journeys', body: 'Look up famous train journeys around the world. Choose 5 that interest you most — try to pick ones from different continents.' },
+      { head: 'Research each journey in detail', body: 'For each journey find: the route (start and end point), the country/countries, the distance, how long it takes, and what makes it special or beautiful.' },
+      { head: 'Get a world map', body: 'Print or draw a world map. For each journey, draw the route on the map and label it with the journey name.' },
+      { head: 'Write a "travel guide" entry for each', body: 'Write a short paragraph for each journey as if you are writing a travel guide — describe the scenery, what you would see from the window, and why someone should take this trip.' },
+      { head: 'Add an image for each', body: 'Draw or print a picture for each journey — either the train itself or the landscape it passes through.' },
+      { head: 'Choose your favourite and say why', body: 'Write a final section: "If I could take one of these journeys, I would choose ___ because…" Give at least 3 reasons.' },
+    ],
+    finish: '📤 Share: Annotated world map + travel guide booklet'
+  },
+
+  trn6: {
+    theme: 'train', category: '🔬 Science',
+    title: 'How Do Maglev Trains Float?',
+    desc: 'Maglev trains have no wheels and no engine — they float using pure magnetism. The science is extraordinary!',
+    steps: [
+      { head: 'Research what maglev means', body: 'Find out: what does "maglev" stand for? Which countries have maglev trains in service today? What speeds do they reach?' },
+      { head: 'Research magnetic levitation', body: 'How do magnets create lift? Research the basic principle of repulsion between same magnetic poles. Try to find a simple explanation in your own words.' },
+      { head: 'Understand the two systems', body: 'There are two main maglev systems — EMS (electromagnetic suspension) and EDS (electrodynamic suspension). Research the difference and write a short comparison.' },
+      { head: 'Draw a labelled diagram', body: 'Draw a cross-section diagram of a maglev train and track. Label: the magnets in the track, the magnets in the train, the gap between them, and the direction of forces.' },
+      { head: 'Research the advantages and challenges', body: 'Why aren\'t all trains maglev? Research the benefits (speed, quiet, no friction) AND the challenges (cost, special track). Write a balanced list.' },
+      { head: 'Write your summary', body: 'Write a paragraph explaining maglev technology clearly enough that someone in Year 3 could understand it. Simple, clear language is harder to write than complicated language!' },
+    ],
+    finish: '📤 Share: Labelled diagram + written explanation'
+  },
+
+  trn7: {
+    theme: 'train', category: '📐 Design',
+    title: 'Design the Train of the Future',
+    desc: 'Using everything you know about trains, design one that could exist in 50 years time!',
+    steps: [
+      { head: 'Research current cutting-edge trains', body: 'Look at the latest maglev trains, hyperloop concepts, and hydrogen-powered trains. What are engineers currently working on?' },
+      { head: 'Decide on your train\'s key features', body: 'Choose: What will power it? How fast will it go? What route will it run? What problem does it solve that current trains don\'t?' },
+      { head: 'Draw your exterior design', body: 'Sketch the outside of your train — the shape of the nose, the number of carriages, the colour scheme and any special design features. Think about aerodynamics!' },
+      { head: 'Draw the interior', body: 'What will passengers experience inside? Draw the interior layout — seating, windows, technology, special features.' },
+      { head: 'Write your technical specifications', body: 'Create an official "spec sheet": Top speed, Length, Power source, Passenger capacity, Journey time for one key route, Special features.' },
+      { head: 'Name your train and pitch it', body: 'Give your train a name. Write a short "pitch" explaining why your design should be built — what makes it better than what exists today?' },
+    ],
+    finish: '📤 Share: Design drawings + spec sheet + pitch to the class'
+  },
+
+  /* ══ PLANES ══ */
+  pln1: {
+    theme: 'plane', category: '🗺️ Flight Paths',
+    title: 'Map the World\'s Busiest Flight Routes',
+    desc: 'Millions of flights happen every day — discover which routes carry the most passengers and why!',
+    steps: [
+      { head: 'Research the busiest flight routes', body: 'Find the top 10 busiest flight routes in the world by number of passengers. Write: route (city to city), country, approximate passengers per year.' },
+      { head: 'Look for patterns', body: 'Study your list. Are the busiest routes short or long distance? Are they international or domestic? Between which types of cities? Write down 3 patterns you notice.' },
+      { head: 'Get a world map', body: 'Print or draw a world map large enough to draw lines on clearly.' },
+      { head: 'Draw and label the routes', body: 'Draw each route as an arc (curved line) between the two cities on the map. Label each one with the route name and rank number.' },
+      { head: 'Research why those routes are so busy', body: 'Pick your 3 most interesting routes and research WHY they are so busy — is it business travel, tourism, geography, or something else?' },
+      { head: 'Write your analysis', body: 'Write a paragraph explaining what you discovered: "The world\'s busiest flight routes are mostly between ___ because…" Use your research as evidence.' },
+    ],
+    finish: '📤 Share: Annotated world map + written analysis'
+  },
+
+  pln2: {
+    theme: 'plane', category: '🔬 Science',
+    title: 'The Forces of Flight Explained',
+    desc: 'Four invisible forces are fighting each other every time a plane flies — research them and explain them clearly!',
+    steps: [
+      { head: 'Research the 4 forces', body: 'Look up: Lift, Drag, Thrust, and Weight. Write one sentence explaining each force in your own words.' },
+      { head: 'Understand how they work together', body: 'Which forces work in the same direction? Which oppose each other? What has to happen for a plane to take off, cruise, and land? Write notes for each phase.' },
+      { head: 'Research Bernoulli\'s principle', body: 'This is the science behind how wings create lift. Research how the shape of a wing (an aerofoil) creates a difference in air pressure above and below. Draw it.' },
+      { head: 'Draw your forces diagram', body: 'Draw a plane (side view). Add 4 labelled arrows showing each force in the correct direction. Use a different colour for each. Add a legend.' },
+      { head: 'Create a "phase" explanation', body: 'Draw 3 mini diagrams: Takeoff, Cruising, Landing. For each one, show which forces are larger or smaller and explain what the pilot does to control them.' },
+      { head: 'Teach it to someone', body: 'Record yourself explaining the 4 forces using your diagram as a visual aid, as if you are teaching a Year 3 student who has never heard of them.' },
+    ],
+    finish: '📤 Share: Forces diagram + phase diagrams + recorded explanation'
+  },
+
+  pln3: {
+    theme: 'plane', category: '🏆 Records',
+    title: 'The World\'s Most Extreme Aircraft',
+    desc: 'Aviation records are extraordinary — some push the limits of what seems physically possible!',
+    steps: [
+      { head: 'Research the extremes', body: 'Find record-holders for: fastest aircraft ever, largest aircraft ever, highest-flying aircraft, longest non-stop flight, and strangest-looking aircraft. Write the key facts for each.' },
+      { head: 'Dig deeper into 3 of them', body: 'Choose 3 of your record-holders and research them in much more detail: who built them, when, what they were designed for, and what happened to them.' },
+      { head: 'Create a comparison display', body: 'Make a visual display comparing your 3 aircraft — draw each one to the same scale if possible, or at least side-by-side with measurements labelled.' },
+      { head: 'Add data visualisation', body: 'Create a chart or graph showing one of the statistics — for example, a bar chart comparing the top speeds of your 3 aircraft vs a normal passenger jet.' },
+      { head: 'Research the science behind the record', body: 'For your favourite record, explain: what engineering or physics makes that record possible? What had to be solved to achieve it?' },
+      { head: 'Write your "most impressive" verdict', body: 'Write a paragraph arguing which of all your records is the most impressive achievement, using evidence from your research to support your opinion.' },
+    ],
+    finish: '📤 Share: Comparison display + data chart + written verdict'
+  },
+
+  pln4: {
+    theme: 'plane', category: '⏳ History',
+    title: 'From the Wright Brothers to Today',
+    desc: 'The history of aviation spans just over 100 years — from a 12-second hop to supersonic flight. What a journey!',
+    steps: [
+      { head: 'Start at the beginning', body: 'Research the Wright Brothers: When did they fly? Where? How long was the first flight? What was their plane called? Why were they successful when others had failed?' },
+      { head: 'Find 8–10 key milestones', body: 'Research major aviation firsts: first solo Atlantic crossing, first commercial airline, jet engines, breaking the sound barrier, jumbo jets, supersonic passenger travel (Concorde), modern aircraft.' },
+      { head: 'Plan your timeline', body: 'Decide on your format and scale. Aviation history covers 1903 to now — plan how to space your events so they are readable and interesting.' },
+      { head: 'Build the timeline', body: 'For each event: add the date, a short description (2–3 sentences), and a drawing or printed image of the aircraft involved.' },
+      { head: 'Highlight the key turning points', body: 'Choose the 3 events you think changed aviation the most and mark them specially — explain in a sentence WHY each one was a turning point.' },
+      { head: 'Add a "next 50 years" section', body: 'Extend the timeline into the future. Research what is currently being developed (electric planes, hydrogen fuel, supersonic successors to Concorde) and add your predictions.' },
+    ],
+    finish: '📤 Share: Full illustrated timeline displayed or presented'
+  },
+
+  pln5: {
+    theme: 'plane', category: '🎙️ Expert Report',
+    title: 'Be an Aviation Journalist',
+    desc: 'Choose a famous aircraft or aviation story and write it up like a professional journalist or documentary presenter!',
+    steps: [
+      { head: 'Choose your subject', body: 'Pick a famous aircraft (Spitfire, Concorde, Boeing 747, SR-71 Blackbird…) OR a famous aviation event (first Moon mission, Concorde retirement, breaking the sound barrier). Choose something that genuinely excites you.' },
+      { head: 'Research deeply', body: 'Find out everything about your subject. Go beyond the basic facts — find the interesting details, the challenges, the people behind it, and why it mattered.' },
+      { head: 'Plan your report structure', body: 'Decide the sections: Introduction (the hook), Background (context), The story in detail, Why it matters, Conclusion. Write headings and bullet point notes for each.' },
+      { head: 'Write your report', body: 'Write your full report using your notes. Use a mix of facts and engaging storytelling. Think about what makes something interesting to read, not just informative.' },
+      { head: 'Add visuals', body: 'Include at least 2 images (drawn or printed) with captions that add information, not just repeat what the text already says.' },
+      { head: 'Present or record it', body: 'Read your report aloud as if presenting a TV documentary, or record yourself narrating it on the iPad or Chromebook.' },
+    ],
+    finish: '📤 Share: Written report with images + live or recorded presentation'
+  },
+
+  pln6: {
+    theme: 'plane', category: '📐 Engineering',
+    title: 'How Are Planes Built?',
+    desc: 'A modern aircraft has millions of parts — find out how the world\'s most complex machines are designed and put together!',
+    steps: [
+      { head: 'Research the design phase', body: 'How do engineers design a new aircraft? Research computer modelling, wind tunnel testing, and the years of development before a plane is ever built. Who does this work?' },
+      { head: 'Research the materials', body: 'What are modern aircraft made of? Research aluminium alloys, carbon fibre composites, titanium and why each material is used where it is. What properties matter most?' },
+      { head: 'Research the manufacturing process', body: 'Look up how aircraft are actually assembled — research Boeing or Airbus factories. Are they built in sections? How are parts transported? How long does it take?' },
+      { head: 'Research the testing process', body: 'Before a plane carries passengers, how is it tested? Research ground tests, test flights, and certification. What has to be proven before it can fly commercially?' },
+      { head: 'Create a flowchart', body: 'Draw a flowchart showing the entire journey from "design idea" to "first passenger flight." Include all the key stages with a brief description of each.' },
+      { head: 'Find a surprising fact', body: 'Find the most surprising or impressive fact you discovered during your research and write it up as a "Did you know?" box to share with the class.' },
+    ],
+    finish: '📤 Share: Process flowchart + written report + "Did you know?" fact'
+  },
+
+  /* ══ CODING ══ */
+  cod1: {
+    theme: 'code', category: '🎮 Scratch Game',
+    title: 'Build a Train Game in Scratch',
+    desc: 'Design and code a complete train game — you get to decide the rules, the levels and how it works!',
+    steps: [
+      { head: 'Plan your game first (on paper!)', body: 'Before opening Scratch, draw your game on paper. What does the player control? What is the goal? What are the obstacles or challenges? Where are the stations?' },
+      { head: 'Design your sprites', body: 'Open Scratch and create or import your sprites — at minimum: a train sprite and a background. Draw them in the Scratch sprite editor to make them your own.' },
+      { head: 'Code the movement', body: 'Make your train move using keyboard controls (arrow keys or WASD). Use "if key pressed" blocks. Test it works smoothly before moving on.' },
+      { head: 'Add the game rules', body: 'Code the core game mechanic: collecting passengers, hitting obstacles, reaching stations — whatever your plan says. Add variables for score or lives.' },
+      { head: 'Add sounds and effects', body: 'Add a train sound when moving, a sound for collecting passengers, and a sound for crashing or completing a level. Find sounds in the Scratch library or record your own.' },
+      { head: 'Add a start screen and game over', body: 'Every good game needs a start screen and a game over/win screen. Code these as separate scenes (backdrops) with appropriate messages and a restart option.' },
+    ],
+    finish: '📤 Share: Publish on Scratch and share the link — let the class play it!'
+  },
+
+  cod2: {
+    theme: 'code', category: '✈️ Scratch Simulation',
+    title: 'Code a Flying Plane in Scratch',
+    desc: 'Build a plane simulation that shows real aviation concepts — takeoff, cruising and landing!',
+    steps: [
+      { head: 'Plan your simulation', body: 'Decide what your simulation will show: a simple side-scrolling flight? A top-down route map? A takeoff and landing sequence? Sketch it on paper first.' },
+      { head: 'Create your plane sprite and backgrounds', body: 'Design your plane in the Scratch sprite editor. Create backdrops for: the airport (ground), the sky (cruising), and the destination airport.' },
+      { head: 'Code the takeoff sequence', body: 'Program the plane to gradually speed up on the runway and then rise into the air — changing backdrop from ground to sky. Use "glide" or "change y" blocks.' },
+      { head: 'Code the flight controls', body: 'Let the player steer the plane during the cruising phase using arrow keys. Add a speed indicator using a variable shown on screen.' },
+      { head: 'Code the landing sequence', body: 'Program the landing — the plane descends, slows down, and lands. Make it feel realistic: too fast = crash, correct speed = successful landing.' },
+      { head: 'Add aviation information', body: 'Add text that appears at each phase explaining real aviation facts — e.g. "Takeoff speed is approximately 280km/h" — so it is both a game and an educational tool.' },
+    ],
+    finish: '📤 Share: Published Scratch link + screen recording of it in action'
+  },
+
+  cod3: {
+    theme: 'code', category: '🗺️ Scratch Map',
+    title: 'Create an Interactive Map in Scratch',
+    desc: 'Combine your love of mapping and coding to build a map people can actually click and explore!',
+    steps: [
+      { head: 'Design your map concept', body: 'Decide: what kind of map? A world map showing famous train journeys? An Australian map with airports? A fantasy transport map? Plan it on paper first.' },
+      { head: 'Create or import your map backdrop', body: 'Draw your map as the Scratch backdrop, or import a simple map image. Keep it clear and not too detailed — it\'s the background, not the star.' },
+      { head: 'Add location sprites', body: 'Create small sprites for each clickable location — a dot, a train icon, or a plane icon. Position them correctly on the map.' },
+      { head: 'Code the click interactions', body: 'For each location sprite, add: "when this sprite clicked → show information about this location." Use a text box or speech bubble to display the info.' },
+      { head: 'Write the content for each location', body: 'Research and write the information that appears when each location is clicked — a key fact about the train or flight connection there. Make it genuinely interesting!' },
+      { head: 'Add a navigation system', body: 'Add a title screen with instructions. Add a way to go "back to map" after viewing a location. Test that every click works correctly.' },
+    ],
+    finish: '📤 Share: Published Scratch link — let classmates explore your map'
+  },
+
+  cod4: {
+    theme: 'code', category: '🧠 Scratch Quiz',
+    title: 'Code a Trains & Planes Quiz in Scratch',
+    desc: 'Build a fully working quiz game — with questions, answer checking, scoring and a results screen!',
+    steps: [
+      { head: 'Write your 8 quiz questions first', body: 'Before coding ANYTHING, write 8 questions about trains and planes. For each one: write the correct answer and 3 wrong answers. Have a mix of easy, medium and hard.' },
+      { head: 'Plan your quiz layout', body: 'Sketch how each question screen will look: the question at the top, 4 answer buttons, a score display. Simple and clear is best.' },
+      { head: 'Build the first question in Scratch', body: 'Code just question 1 completely: backdrop with the question, 4 button sprites with answer text, and code that checks if the correct one is clicked.' },
+      { head: 'Add score tracking', body: 'Create a "Score" variable. When the correct answer is clicked: add 1 to Score and show a "Correct!" message. When wrong: show a "Not quite!" message. Then move to the next question.' },
+      { head: 'Build all 8 questions', body: 'Repeat the pattern for all 8 questions. Use backdrops or different sprite costumes to show each new question. Test after each one.' },
+      { head: 'Add a results screen', body: 'After question 8, show a final screen with the player\'s score out of 8, a message based on how well they did (e.g. "Expert!" for 7–8), and a "Play Again" button that resets the score.' },
+    ],
+    finish: '📤 Share: Published Scratch quiz — challenge classmates and teachers!'
+  },
+
+  cod5: {
+    theme: 'code', category: '🔬 How Computers Work',
+    title: 'Explain How a Computer Thinks',
+    desc: 'You use computers every day — but do you know what\'s actually happening inside? Research and explain it!',
+    steps: [
+      { head: 'Research the key parts of a computer', body: 'Find out what each of these does: CPU (Central Processing Unit), RAM (Random Access Memory), Storage (SSD/HDD), Input devices, Output devices. Write a simple definition for each.' },
+      { head: 'Research how the CPU works', body: 'The CPU is the "brain." Research the fetch-decode-execute cycle — how the CPU follows instructions. Try to explain it in your own words simply.' },
+      { head: 'Understand inputs and outputs', body: 'List 5 input devices and 5 output devices. For each one: what data goes IN, and what comes OUT? How does the computer convert one to the other?' },
+      { head: 'Research binary', body: 'Computers think in 0s and 1s (binary). Research: why binary? What does 0 and 1 represent physically (electricity on/off)? What does the number 5 look like in binary?' },
+      { head: 'Create a labelled diagram', body: 'Draw a computer system diagram showing: all the main components, how they connect, and arrows showing the flow of data between them.' },
+      { head: 'Prepare your explanation', body: 'Prepare a 3–4 minute explanation of how a computer works, using your diagram as a visual. Record it or present it live — make it clear enough for someone who knows nothing about computers.' },
+    ],
+    finish: '📤 Share: Labelled diagram + recorded or live explanation'
+  },
+
+  cod6: {
+    theme: 'code', category: '📖 Teach It',
+    title: 'Teach Someone to Use Scratch',
+    desc: 'The best way to prove you know something is to teach it clearly. Create a beginner\'s guide to Scratch!',
+    steps: [
+      { head: 'Plan what a total beginner needs to know', body: 'Think about when you first started Scratch. What confused you? What do you wish someone had explained? Write a list of the 6 most important things a beginner must learn first.' },
+      { head: 'Write your step-by-step guide', body: 'Write clear instructions for each of your 6 topics. Use numbered steps. Include what to click, what to type, and what the result should look like. Assume the reader has never opened Scratch.' },
+      { head: 'Add screenshots', body: 'Take screenshots on the Chromebook (Ctrl + Show Windows button, or use the Snipping Tool) to illustrate each step. Annotate them with arrows or labels.' },
+      { head: 'Create a simple starter project', body: 'Build a very simple Scratch project that a beginner could make by following your guide — e.g. a sprite that moves and makes a sound when clicked.' },
+      { head: 'Film a tutorial video', body: 'Screen record yourself on the Chromebook (use the Screen Capture tool) walking through the basics of Scratch step by step. Narrate everything you click and why.' },
+      { head: 'Test your guide on someone', body: 'Give your written guide to someone who hasn\'t used Scratch and watch them try to follow it. Did they get stuck anywhere? Update your guide to fix any confusing parts.' },
+    ],
+    finish: '📤 Share: Written guide with screenshots + tutorial screen recording video'
+  },
+
+  cod7: {
+    theme: 'code', category: '🌐 Real-World Coding',
+    title: 'How Is Coding Used in Real Transport?',
+    desc: 'Real trains and planes run on millions of lines of code — discover just how much modern transport depends on software!',
+    steps: [
+      { head: 'Research coding in modern aircraft', body: 'Find out: How much of a modern plane is controlled by computers? What is "fly-by-wire"? What software systems does a plane have? What happens if a system fails?' },
+      { head: 'Research coding in train systems', body: 'Look into: automatic train control systems, signalling software, the code that controls doors and schedules. Research driverless trains — which cities have them?' },
+      { head: 'Research airport computing systems', body: 'Airports use enormous computing systems for: check-in, baggage tracking, air traffic control, runway management. Research one of these in detail.' },
+      { head: 'Research the risks of software in transport', body: 'Find examples where software bugs or failures caused transport problems. What does this tell us about how important reliable code is?' },
+      { head: 'Create a "transport software" diagram', body: 'Draw a diagram of either a train or plane journey. At each point in the journey, annotate what software systems are running in the background.' },
+      { head: 'Write your conclusion', body: 'Write a paragraph answering: "Modern transport could not exist without coding because…" Use specific examples from your research as evidence.' },
+    ],
+    finish: '📤 Share: Annotated diagram + written conclusion presented to class'
+  },
+
+  /* ══ CROSS-TOPIC ══ */
+  crs1: {
+    theme: 'cross', category: '🚂✈️ Trains + Planes',
+    title: 'Train vs Plane — Which Should You Take?',
+    desc: 'This is a real debate that millions of travellers face — use data and research to find the answer!',
+    steps: [
+      { head: 'Choose a real journey to compare', body: 'Pick a specific route where both options exist — for example: London to Paris, Sydney to Melbourne, or Tokyo to Osaka. You\'ll compare train vs plane for THIS specific journey.' },
+      { head: 'Research the train option', body: 'Find: journey time (door to door, not just the train ride), cost (average ticket price), carbon emissions, number of trains per day, and comfort features.' },
+      { head: 'Research the plane option', body: 'Find the same data for flying: door-to-door time (including airport check-in, security, waiting), cost, carbon emissions, flights per day, and comfort.' },
+      { head: 'Create a comparison table', body: 'Build a table with the categories down the side and Train/Plane across the top. Fill in every cell with real data. Be as specific as you can with numbers.' },
+      { head: 'Consider different travellers', body: 'Who might prefer each option? Write bullet points for: a business traveller, a family with young children, someone who cares about the environment, someone on a tight budget.' },
+      { head: 'Write your verdict', body: 'Write a clear, evidence-based conclusion: "For this journey, I recommend ___ because…" Use at least 3 pieces of data from your table to support your argument.' },
+    ],
+    finish: '📤 Share: Comparison table + written verdict — debate it with the class!'
+  },
+
+  crs2: {
+    theme: 'cross', category: '💻🚂 Coding + Trains',
+    title: 'Code a Train Timetable Tool in Scratch',
+    desc: 'Real train stations have digital departure boards — build your own version in Scratch!',
+    steps: [
+      { head: 'Research how real timetables work', body: 'Look at a real train timetable online (try the Trainline or a national rail website). How is the information organised? What does each column mean?' },
+      { head: 'Design your timetable tool', body: 'Plan on paper: which stations will be in your tool? How many trains per route? Will the user click a destination to see times, or scroll through a list?' },
+      { head: 'Create your backdrop and interface', body: 'Design a backdrop that looks like a departure board — dark background, bright text. Create the title and layout in Scratch.' },
+      { head: 'Add the destination buttons', body: 'Create sprite buttons for each destination. When clicked, each one should display that route\'s timetable information using a text display or speech bubble.' },
+      { head: 'Write realistic timetable data', body: 'Invent (or research real) departure times for each route. Enter this data into your Scratch project. Make it look authentic with platform numbers and journey durations.' },
+      { head: 'Add extras', body: 'Add a "Delayed" button that randomly marks a train as delayed (just like real life!). Add a clock variable showing the current time. Test everything works and looks great.' },
+    ],
+    finish: '📤 Share: Published Scratch tool + screen recording demo'
+  },
+
+  crs3: {
+    theme: 'cross', category: '🗺️💻 Mapping + Coding',
+    title: 'Build a Digital Transport Map',
+    desc: 'Combine your two biggest computing skills — mapping and coding — into one impressive interactive project!',
+    steps: [
+      { head: 'Decide on your map\'s scope', body: 'Will you map: world transport routes? Australian transport? A fictional future transport network? Decide the scope and sketch a rough plan.' },
+      { head: 'Design the map in detail', body: 'On paper, draw the full map including all routes, locations and labels. This is your design document — get it right here before building in Scratch.' },
+      { head: 'Build the map backdrop in Scratch', body: 'Create your map as a Scratch backdrop. Keep it clean and clear — the map should be easy to read at a glance.' },
+      { head: 'Add interactive location sprites', body: 'Place sprites at key locations. When clicked, each sprite shows information: what transport goes there, interesting facts, connection to other places.' },
+      { head: 'Add route visualisation', body: 'Add a feature where the user can select a route and see it highlighted on the map — use a coloured line sprite that appears when a route is chosen.' },
+      { head: 'Write quality content for each location', body: 'Research and write genuinely interesting information for each clickable location. The map should teach people something real, not just look impressive.' },
+    ],
+    finish: '📤 Share: Published Scratch interactive map + live demo to the class'
+  },
+
+  crs4: {
+    theme: 'cross', category: '🌟 All Topics!',
+    title: 'My Ultimate Expert Presentation',
+    desc: 'This is your moment — choose your strongest topic and show the class what a real expert looks like!',
+    steps: [
+      { head: 'Choose your ONE topic', body: 'Pick the thing you know most deeply — a specific train, a type of aircraft, a coding concept, a famous route or network. The more specific, the better.' },
+      { head: 'Brainstorm everything you know', body: 'Write down absolutely everything you know about this topic without looking anything up. Fill the page! This shows you what you already have.' },
+      { head: 'Research to fill the gaps', body: 'Now look up the things you weren\'t sure about or want to know more about. Add those to your notes.' },
+      { head: 'Choose your 5 most interesting points', body: 'From all your notes, pick the 5 most impressive, surprising or important points. These are the backbone of your presentation.' },
+      { head: 'Choose your format and prepare', body: 'Will you do: a live talk? A Scratch interactive? A screen recording? A Google Slides presentation? A combination? Prepare all your materials.' },
+      { head: 'Present to the class', body: 'You are the expert. Speak with confidence — you genuinely know more about this than most people in the room. Invite questions at the end.' },
+    ],
+    finish: '📤 Share: Your choice of format — you\'re the expert!'
+  },
+
+  crs5: {
+    theme: 'cross', category: '🌍 All Topics!',
+    title: 'Design a Smart City Transport System',
+    desc: 'The ultimate project — combine trains, planes, mapping AND coding to design a complete future transport network!',
+    steps: [
+      { head: 'Invent your city', body: 'Create a fictional future city. Give it a name, decide its geography (is it on a coast? Has mountains? Is it an island?), and estimate its population. This shapes your transport needs.' },
+      { head: 'Design the ground transport network', body: 'Plan the train/metro system: How many lines? Where do they go? Draw a rail map using your mapping skills. Think about where people actually need to travel.' },
+      { head: 'Design the air connections', body: 'Where is your city\'s airport? Which other cities does it connect to? What type of aircraft use the routes? Add the airport and flight routes to a larger regional map.' },
+      { head: 'Plan the technology', body: 'What smart technology runs your transport system? Driverless trains? AI traffic management? App-based ticketing? Describe the key software systems that keep everything running.' },
+      { head: 'Build a Scratch interactive', body: 'Create a Scratch project that brings your city to life — an interactive map, a transport simulator, or an information kiosk about your city\'s network. Use your coding skills fully.' },
+      { head: 'Pitch your city', body: 'Prepare a presentation as if pitching your transport system to city planners. Cover: the map, the technology, the environmental impact, and why your design is better than current cities.' },
+    ],
+    finish: '📤 Share: Maps + Scratch project + live pitch presentation to the class'
+  }
+
+};
+
+// ─── MODAL LOGIC ────────────────────────────────────────────────────────────
+function openModal(id) {
+  const inv = investigations[id];
+  if (!inv) return;
+  const t = inv.theme;
+
+  document.getElementById('modalTop').className      = 'modal-top ' + t;
+  document.getElementById('modalCategory').textContent = inv.category;
+  document.getElementById('modalTitle').textContent    = inv.title;
+  document.getElementById('modalDesc').textContent     = inv.desc;
+
+  const stepsEl = document.getElementById('modalSteps');
+  stepsEl.innerHTML = '';
+  inv.steps.forEach((s, i) => {
+    const li = document.createElement('li');
+    li.className = 'step ' + t + '-step';
+    li.innerHTML = `<div class="step-num">${i + 1}</div><div class="step-text"><strong>${s.head}</strong><span>${s.body}</span></div>`;
+    stepsEl.appendChild(li);
+  });
+
+  const fin = document.getElementById('modalFinish');
+  fin.className = 'finish-box ' + t;
+  fin.innerHTML = `<span class="finish-icon">🎉</span><span>${inv.finish}</span>`;
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('modal').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeIfBackground(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+  });
+});
+</script>
+</body>
+</html>
